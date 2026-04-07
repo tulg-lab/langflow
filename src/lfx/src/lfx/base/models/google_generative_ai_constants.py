@@ -75,6 +75,13 @@ GOOGLE_GENERATIVE_AI_MODELS_DETAILED = [
     ),
     create_model_metadata(
         provider="Google Generative AI",
+        name="gemini-3.1-flash-lite-preview",
+        icon="GoogleGenerativeAI",
+        tool_calling=False,
+        preview=True,
+    ),
+    create_model_metadata(
+        provider="Google Generative AI",
         name="gemini-3-pro-preview",
         icon="GoogleGenerativeAI",
         tool_calling=False,
