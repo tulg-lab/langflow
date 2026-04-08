@@ -537,8 +537,6 @@ def create_app():
     load_plugin_routes(app)
 
     # Register SSO routes if configured
-    import os
-
     if os.environ.get("LANGFLOW_SSO_GOOGLE_CLIENT_ID"):
         from langflow.sso.routes import router as sso_router
 
