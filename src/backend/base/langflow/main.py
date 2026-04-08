@@ -536,6 +536,14 @@ def create_app():
     # Discover and register additional routers from plugins (langflow.plugins entry-point)
     load_plugin_routes(app)
 
+    # Register SSO routes if configured
+    import os
+
+    if os.environ.get("LANGFLOW_SSO_GOOGLE_CLIENT_ID"):
+        from langflow.sso.routes import router as sso_router
+
+        app.include_router(sso_router)
+
     @app.exception_handler(Exception)
     async def exception_handler(_request: Request, exc: Exception):
         if isinstance(exc, HTTPException):
