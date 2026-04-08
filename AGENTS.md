@@ -198,3 +198,60 @@ cd docs
 yarn install
 yarn start        # Dev server on port 3000 (prompts for 3001 if 3000 is in use)
 ```
+
+## Railway Deployment
+
+Project: `keen-recreation` (tulg-lab/langflow)
+Region: `asia-southeast1` (Singapore)
+
+### Environments
+- **dev** — Production-like dev environment, deploys from `main` branch
+  - Domain: `langflow-dev-7cb8.up.railway.app`
+  - Services: Langflow, Postgres
+- **dev-sso** — SSO testing environment, deploys from `dev-sso` branch
+  - Domain: `langflow-dev-sso.up.railway.app`
+
+### Services
+- **Langflow** — Main app, Dockerfile builder (`docker/railway.Dockerfile`), start command: `langflow run --host 0.0.0.0 --port 7860`
+- **Postgres** — PostgreSQL database with persistent volume
+
+### Key Environment Variables
+```
+LANGFLOW_DATABASE_URL          # PostgreSQL connection string (per environment)
+LANGFLOW_SECRET_KEY            # JWT signing key (per environment)
+GEMINI_API_KEY                 # Google Gemini API key
+LANGFLOW_SSO_GOOGLE_CLIENT_ID  # Google OAuth2 Client ID (enables SSO)
+LANGFLOW_SSO_GOOGLE_CLIENT_SECRET  # Google OAuth2 Client Secret
+LANGFLOW_SSO_ALLOWED_DOMAIN    # Restrict SSO to email domain (e.g. amanotes.com)
+```
+
+### Deployment Commands
+```bash
+railway link                   # Link to project
+railway environment dev        # Switch environment
+railway service Langflow       # Link to service
+railway up --service Langflow  # Deploy from local code
+```
+
+## SSO (Google OIDC)
+
+SSO is implemented as a built-in plugin at `src/backend/base/langflow/sso/`.
+
+### How It Works
+- Routes registered conditionally when `LANGFLOW_SSO_GOOGLE_CLIENT_ID` env var exists
+- Endpoints: `/api/v1/sso/login`, `/api/v1/sso/callback`, `/api/v1/sso/config`
+- Users auto-provisioned in Langflow DB from Google email
+- Domain restriction via `LANGFLOW_SSO_ALLOWED_DOMAIN`
+- Frontend "Sign in with Google" button on login page
+
+### Setup
+1. Create Google OAuth2 Client at https://console.cloud.google.com/apis/credentials
+2. Add authorized redirect URI: `https://<domain>/api/v1/sso/callback`
+3. Set env vars: `LANGFLOW_SSO_GOOGLE_CLIENT_ID`, `LANGFLOW_SSO_GOOGLE_CLIENT_SECRET`, `LANGFLOW_SSO_ALLOWED_DOMAIN`
+4. Redeploy to activate
+
+### Files
+- `src/backend/base/langflow/sso/routes.py` — SSO routes (login, callback, config)
+- `src/backend/base/langflow/main.py` — Conditional SSO route registration
+- `src/frontend/src/pages/LoginPage/index.tsx` — Google sign-in button
+- `src/backend/base/langflow/services/database/models/auth/sso.py` — DB models (SSOUserProfile, SSOConfig)
